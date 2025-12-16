@@ -1,5 +1,6 @@
 package com.six.spacex.domain;
 
+import com.six.spacex.domain.id.RocketId;
 import org.junit.Test;
 
 import java.util.Optional;

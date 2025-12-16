@@ -1,4 +1,6 @@
-package com.six.spacex.domain;
+package com.six.spacex.domain.id;
+
+import com.six.spacex.domain.InvalidObjectStateException;
 
 import java.util.UUID;
 

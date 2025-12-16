@@ -1,5 +1,7 @@
 package com.six.spacex.domain;
 
+import com.six.spacex.domain.id.RocketId;
+
 import java.util.Objects;
 import java.util.Optional;
 
