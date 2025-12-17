@@ -12,7 +12,7 @@ public class MissionTest {
 
     @Test
     public void mission_created_successfully() {
-        Mission mission = new Mission(Optional.of(new MissionId(UUID.randomUUID())));
+        Mission mission = new Mission(Optional.of(new MissionId(UUID.randomUUID())), "Mars");
         assertEquals(MissionStatus.SCHEDULED, mission.getStatus());
     }
 }
