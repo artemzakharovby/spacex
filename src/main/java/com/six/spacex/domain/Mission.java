@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Mission {
+public class Mission implements SpaceXObject {
 
     private final Optional<MissionId> id;
     private final MissionStatus status;

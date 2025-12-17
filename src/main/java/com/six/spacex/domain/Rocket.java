@@ -5,7 +5,7 @@ import com.six.spacex.domain.id.RocketId;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Rocket {
+public class Rocket implements SpaceXObject {
 
     private final Optional<RocketId> rocketId;
     private final RocketStatus status;

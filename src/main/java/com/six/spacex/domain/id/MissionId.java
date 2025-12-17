@@ -4,7 +4,7 @@ import com.six.spacex.domain.InvalidObjectStateException;
 
 import java.util.UUID;
 
-public record MissionId(UUID id) {
+public record MissionId(UUID id) implements SpaceXId {
 
     public MissionId {
         if (id == null) {
