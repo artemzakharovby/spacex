@@ -12,7 +12,7 @@ public class RocketTest {
 
     @Test
     public void rocket_created_successfully() {
-        Rocket rocket = new Rocket(Optional.of(new RocketId(UUID.randomUUID())));
+        Rocket rocket = new Rocket(Optional.of(new RocketId(UUID.randomUUID())), "Dragon XL");
         assertEquals(RocketStatus.ON_GROUND, rocket.getStatus());
     }
 }
