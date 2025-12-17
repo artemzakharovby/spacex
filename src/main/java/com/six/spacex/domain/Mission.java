@@ -2,7 +2,6 @@ package com.six.spacex.domain;
 
 import com.six.spacex.domain.id.MissionId;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,8 +13,8 @@ public class Mission implements SpaceXObject {
     private final MissionStatus status;
     private final List<Rocket> rockets;
 
-    public Mission(Optional<MissionId> id, String name) {
-        this(id, name, MissionStatus.SCHEDULED, new ArrayList<>());
+    public Mission(Optional<MissionId> id, String name, List<Rocket> rockets) {
+        this(id, name, MissionStatus.SCHEDULED, rockets);
     }
 
     private Mission(Optional<MissionId> id, String name, MissionStatus status, List<Rocket> rockets) {
@@ -67,16 +66,16 @@ public class Mission implements SpaceXObject {
 
     private void validate() {
         if (id == null) {
-            throw new InvalidObjectStateException("Mission ID cannot be null, mission: {0}", this);
+            throw new InvalidObjectStateException("Mission ID cannot be null. Mission: {0}", this);
         }
         if (name == null || name.isBlank()) {
-            throw new InvalidObjectStateException("Mission name cannot be null or blank, mission: {0}", this);
+            throw new InvalidObjectStateException("Mission name cannot be null or blank. Mission: {0}", this);
         }
         if (status == null) {
-            throw new InvalidObjectStateException("Mission status cannot be null, mission: {0}", this);
+            throw new InvalidObjectStateException("Mission status cannot be null. Mission: {0}", this);
         }
         if (rockets == null) {
-            throw new InvalidObjectStateException("Rockets cannot be null, mission: {0}", this);
+            throw new InvalidObjectStateException("Rockets cannot be null. Mission: {0}", this);
         }
     }
 }
