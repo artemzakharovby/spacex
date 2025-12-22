@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Mission {
+public class Mission implements SpaceXObject {
 
     private static final Map<MissionStatus, Set<MissionStatus>> TRANSITIONS = Map.of(
             MissionStatus.SCHEDULED, Set.of(MissionStatus.PENDING, MissionStatus.IN_PROGRESS),
@@ -60,13 +60,19 @@ public class Mission {
         return changeStatus(MissionStatus.IN_PROGRESS, rockets);
     }
 
+    public Mission schedule(Rocket... rockets) {
+        isTransitionAllowed(MissionStatus.SCHEDULED);
+        return changeStatus(MissionStatus.SCHEDULED, rockets);
+    }
+
     public Mission markAsPending(Rocket... rockets) {
+        isTransitionAllowed(MissionStatus.PENDING);
         return changeStatus(MissionStatus.PENDING, rockets);
     }
 
     public Mission changeStatus(MissionStatus updatedStatus, Rocket... rockets) {
         isTransitionAllowed(updatedStatus);
-        if (this.rockets.size() != rockets.length) {
+        if (updatedStatus != MissionStatus.ENDED && this.rockets.size() != rockets.length) {
             throw new InvalidObjectStateException(
                     "Number of rockets has changed. Originally: {0}, now: {1}, mission: {2}",
                     this.rockets.size(), rockets.length, this

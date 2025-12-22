@@ -1,9 +1,10 @@
-package com.six.spacex.service;
+package com.six.spacex.service.rocket;
 
 import com.six.spacex.domain.Rocket;
 import com.six.spacex.domain.id.MissionId;
 import com.six.spacex.domain.id.RocketId;
 import com.six.spacex.repository.CrudRepository;
+import com.six.spacex.service.SpaceXServiceException;
 
 import java.util.Comparator;
 import java.util.List;
