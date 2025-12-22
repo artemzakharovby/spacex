@@ -35,9 +35,11 @@ public class Mission {
     }
 
     public Mission(MissionId id, String name, List<Rocket> rockets) {
-        this(id, name, MissionStatus.SCHEDULED,
-                rockets.stream().collect(Collectors.toMap(Rocket::getId, rocket -> rocket.assignToMission(id)))
-        );
+        this(id, name, MissionStatus.SCHEDULED, rockets);
+    }
+
+    private Mission(MissionId id, String name, MissionStatus status, List<Rocket> rockets) {
+        this(id, name, status, rockets.stream().collect(Collectors.toMap(Rocket::getId, rocket -> rocket)));
     }
 
     private Mission(MissionId id, String name, MissionStatus status, Map<RocketId, Rocket> rockets) {
@@ -48,31 +50,34 @@ public class Mission {
         validate();
     }
 
-    public Mission end() {
-
+    public Mission end(Rocket... rockets) {
+        isTransitionAllowed(MissionStatus.ENDED);
+        return changeStatus(MissionStatus.ENDED, rockets);
     }
 
-    public Mission start(RocketId... rocketIds) {
+    public Mission start(Rocket... rockets) {
         isTransitionAllowed(MissionStatus.IN_PROGRESS);
-        for (RocketId rocketId: rocketIds) {
-            Rocket rocket = rockets.get(rocketId);
-            if (rocket == null) {
-                throw new InvalidObjectStateException(
-                        "There is no rocket with ID {0} attached to the mission. Mission: {1}", rocketId, this);
-            } else {
-                rockets.put(rocketId, rocket.start());
+        return changeStatus(MissionStatus.IN_PROGRESS, rockets);
+    }
+
+    public Mission markAsPending(Rocket... rockets) {
+        return changeStatus(MissionStatus.PENDING, rockets);
+    }
+
+    public Mission changeStatus(MissionStatus updatedStatus, Rocket... rockets) {
+        isTransitionAllowed(updatedStatus);
+        if (this.rockets.size() != rockets.length) {
+            throw new InvalidObjectStateException(
+                    "Number of rockets has changed. Originally: {0}, now: {1}, mission: {2}",
+                    this.rockets.size(), rockets.length, this
+            );
+        }
+        for (Rocket rocket: rockets) {
+            if (this.rockets.get(rocket.getId()) == null) {
+                throw new InvalidObjectStateException("There is no rocket with ID {0}. Mission: {1}", rocket.getId(), this);
             }
         }
-        return new Mission(id, name, MissionStatus.IN_PROGRESS, rockets);
-    }
-
-    public Mission markAsPending() {
-        return changeStatus(MissionStatus.PENDING);
-    }
-
-    public Mission changeStatus(MissionStatus updatedStatus) {
-        isTransitionAllowed(updatedStatus);
-        return new Mission(id, name, updatedStatus, rockets);
+        return new Mission(id, name, updatedStatus, Arrays.stream(rockets).toList());
     }
 
     public MissionId getId() {
