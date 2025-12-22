@@ -1,5 +1,6 @@
 package com.six.spacex.domain;
 
+import com.six.spacex.InternalSpaceXException;
 import com.six.spacex.domain.id.MissionId;
 import com.six.spacex.domain.id.RocketId;
 
@@ -25,7 +26,7 @@ public class Rocket implements SpaceXObject {
     static {
        RocketStatus[] allStatuses = RocketStatus.values();
        if (TRANSITIONS.size() != allStatuses.length) {
-           throw new InvalidObjectStateException(
+           throw new InternalSpaceXException(
                    "Some rocket statuses are not handled. Transitions: {0}, All statuses: {1}",
                    TRANSITIONS, Arrays.stream(allStatuses).toList()
            );
@@ -45,21 +46,23 @@ public class Rocket implements SpaceXObject {
     }
 
     public Rocket start() {
-        isTransitionAllowed(RocketStatus.IN_SPACE);
         if (missionId.isEmpty()) {
             throw new InvalidObjectStateException("Rocket cannot go to space because there is no mission. Rocket: {0}", this);
         }
-        return new Rocket(id, name, RocketStatus.IN_SPACE, missionId);
+        return changeStatus(RocketStatus.IN_SPACE);
     }
 
     public Rocket onGround() {
-        isTransitionAllowed(RocketStatus.ON_GROUND);
-        return new Rocket(id, name, RocketStatus.ON_GROUND, missionId);
+        return changeStatus(RocketStatus.ON_GROUND);
     }
 
     public Rocket repair() {
-        isTransitionAllowed(RocketStatus.IN_REPAIR);
-        return new Rocket(id, name, RocketStatus.IN_REPAIR, missionId);
+        return changeStatus(RocketStatus.IN_REPAIR);
+    }
+
+    public Rocket changeStatus(RocketStatus updatedStatus) {
+        isTransitionAllowed(updatedStatus);
+        return new Rocket(id, name, updatedStatus, missionId);
     }
 
     public Rocket assignToMission(MissionId missionId) {
