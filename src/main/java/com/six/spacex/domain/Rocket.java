@@ -8,21 +8,28 @@ import java.util.Optional;
 
 public class Rocket implements SpaceXObject {
 
-    private final Optional<RocketId> id;
+    private final RocketId id;
     private final String name;
     private final RocketStatus status;
     private final Optional<MissionId> missionId;
 
-    public Rocket(Optional<RocketId> id, String name) {
+    public Rocket(RocketId id, String name) {
         this(id, name, RocketStatus.ON_GROUND, Optional.empty());
     }
 
-    private Rocket(Optional<RocketId> id, String name, RocketStatus status, Optional<MissionId> missionId) {
+    private Rocket(RocketId id, String name, RocketStatus status, Optional<MissionId> missionId) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.missionId = missionId;
         validate();
+    }
+
+    public Rocket markAsOnGround() {
+        if (status != RocketStatus.IN_SPACE) {
+            throw new InvalidObjectStateException("Rocket cannot be on ground because of invalid status. Rocket: {0}", this);
+        }
+        return new Rocket(id, name, RocketStatus.ON_GROUND, Optional.empty());
     }
 
     public Rocket markAsInSpace() {
@@ -51,7 +58,7 @@ public class Rocket implements SpaceXObject {
         return new Rocket(id, name, status, Optional.of(missionId));
     }
 
-    public Optional<RocketId> getId() {
+    public RocketId getId() {
         return id;
     }
 
@@ -115,7 +122,7 @@ public class Rocket implements SpaceXObject {
     }
 
     private void validate() {
-        if (id == null || id.isEmpty()) {
+        if (id == null) {
             throw new InvalidObjectStateException("Rocket ID cannot be null. Rocket: {0}", this);
         }
         if (name == null || name.isBlank()) {
