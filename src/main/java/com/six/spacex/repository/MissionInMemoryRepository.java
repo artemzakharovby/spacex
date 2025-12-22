@@ -1,6 +1,5 @@
 package com.six.spacex.repository;
 
-import com.six.spacex.domain.Mission;
 import com.six.spacex.domain.id.MissionId;
 
 import java.util.List;

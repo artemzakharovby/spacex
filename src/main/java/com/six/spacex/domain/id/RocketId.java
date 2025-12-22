@@ -4,10 +4,10 @@ import com.six.spacex.domain.InvalidObjectStateException;
 
 import java.util.UUID;
 
-public record RocketId(UUID id) implements SpaceXId {
+public record RocketId(UUID value) implements SpaceXId {
 
     public RocketId {
-        if (id == null) {
+        if (value == null) {
             throw new InvalidObjectStateException("Rocket ID cannot be null");
         }
     }
