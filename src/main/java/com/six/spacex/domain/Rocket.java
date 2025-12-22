@@ -1,12 +1,32 @@
 package com.six.spacex.domain;
 
+import com.six.spacex.InternalSpaceXException;
 import com.six.spacex.domain.id.MissionId;
 import com.six.spacex.domain.id.RocketId;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class Rocket implements SpaceXObject {
+
+    private static final Map<RocketStatus, Set<RocketStatus>> TRANSITIONS = Map.of(
+            RocketStatus.ON_GROUND, Set.of(RocketStatus.IN_SPACE, RocketStatus.IN_REPAIR),
+            RocketStatus.IN_REPAIR, Set.of(RocketStatus.ON_GROUND),
+            RocketStatus.IN_SPACE, Set.of(RocketStatus.ON_GROUND)
+    );
+
+    static {
+        RocketStatus[] rocketStatuses = RocketStatus.values();
+        if (TRANSITIONS.size() < rocketStatuses.length) {
+            throw new InternalSpaceXException(
+                    "Not all rocket statuses are handled. TRANSITIONS: {0}, RocketStatuses: {1}",
+                    TRANSITIONS, Arrays.stream(rocketStatuses).toList()
+            );
+        }
+    }
 
     private final RocketId id;
     private final String name;
@@ -26,10 +46,8 @@ public class Rocket implements SpaceXObject {
     }
 
     public Rocket markAsOnGround() {
-        if (status != RocketStatus.IN_SPACE) {
-            throw new InvalidObjectStateException("Rocket cannot be on ground because of invalid status. Rocket: {0}", this);
-        }
-        return new Rocket(id, name, RocketStatus.ON_GROUND, Optional.empty());
+        isTransitionAllowed(status, RocketStatus.ON_GROUND);
+        return new Rocket(id, name);
     }
 
     public Rocket markAsInSpace() {
@@ -38,18 +56,12 @@ public class Rocket implements SpaceXObject {
     }
 
     public Rocket markAsRepaired() {
-        if (status != RocketStatus.IN_REPAIR) {
-            throw new InvalidObjectStateException(
-                    "Rocket cannot be marked as repaired because of invalid status. Rocket: {0}", this
-            );
-        }
+        isTransitionAllowed(status, RocketStatus.ON_GROUND);
         return new Rocket(id, name, RocketStatus.ON_GROUND, missionId);
     }
 
     public Rocket markAsRepairing() {
-        if (status != RocketStatus.ON_GROUND) {
-            throw new InvalidObjectStateException("Rocket cannot be repaired because of invalid status. Rocket: {0}", this);
-        }
+        isTransitionAllowed(status, RocketStatus.IN_REPAIR);
         return new Rocket(id, name, RocketStatus.IN_REPAIR, missionId);
     }
 
@@ -99,11 +111,18 @@ public class Rocket implements SpaceXObject {
     }
 
     private void validateBeforeGoingToSpace() {
-        if (status != RocketStatus.ON_GROUND) {
-            throw new InvalidObjectStateException("Rocket cannot be in space because of invalid status. Rocket: {0}", this);
-        }
+        isTransitionAllowed(status, RocketStatus.IN_SPACE);
         if (missionId.isEmpty()) {
             throw new InvalidObjectStateException("Rocket cannot be in space because there is no mission. Rocker: {0}", this);
+        }
+    }
+
+    private void isTransitionAllowed(RocketStatus current, RocketStatus updated) {
+        Set<RocketStatus> allowedTransitions = TRANSITIONS.get(current);
+        if (!allowedTransitions.contains(updated)) {
+            throw new InvalidObjectStateException(
+                    "Rocket status {0} cannot be changed to {1}. Available statuses: {2}", current, updated, allowedTransitions
+            );
         }
     }
 

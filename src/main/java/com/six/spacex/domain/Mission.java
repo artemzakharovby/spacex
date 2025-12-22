@@ -1,16 +1,35 @@
 package com.six.spacex.domain;
 
+import com.six.spacex.InternalSpaceXException;
 import com.six.spacex.domain.id.MissionId;
 import com.six.spacex.domain.id.RocketId;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Mission implements SpaceXObject {
+
+    private static final Map<MissionStatus, Set<MissionStatus>> TRANSITIONS = Map.of(
+            MissionStatus.SCHEDULED, Set.of(MissionStatus.PENDING, MissionStatus.IN_PROGRESS),
+            MissionStatus.PENDING, Set.of(MissionStatus.SCHEDULED),
+            MissionStatus.IN_PROGRESS, Set.of(MissionStatus.ENDED)
+    );
+
+    static {
+        MissionStatus[] rocketStatuses = MissionStatus.values();
+        if (TRANSITIONS.size() < rocketStatuses.length) {
+            throw new InternalSpaceXException(
+                    "Not all mission statuses are handled. TRANSITIONS: {0}, RocketStatuses: {1}",
+                    TRANSITIONS, Arrays.stream(rocketStatuses).toList()
+            );
+        }
+    }
 
     private static final int INVALID_NUMBER_OF_ROCKETS = 0;
 
@@ -39,16 +58,12 @@ public class Mission implements SpaceXObject {
     }
 
     public Mission markAsEnded() {
-        if (status != MissionStatus.IN_PROGRESS) {
-            throw new InvalidObjectStateException("Mission cannot be ended because it has invalid status. Mission: {0}", this);
-        }
+        isTransitionAllowed(status, MissionStatus.ENDED);
         return new Mission(id, name, MissionStatus.ENDED, Map.of());
     }
 
     public Mission markAsInProgress(RocketId... rocketIds) {
-        if (status != MissionStatus.SCHEDULED) {
-            throw new InvalidObjectStateException("Mission cannot be started because it has invalid status. Mission: {0}", this);
-        }
+        isTransitionAllowed(status, MissionStatus.IN_PROGRESS);
         // "no repairing rockets" validation is not needed, because they will always have ON_GROUND status.
         // check markAsScheduled
         if (rockets.isEmpty()) {
@@ -76,9 +91,7 @@ public class Mission implements SpaceXObject {
     }
 
     public Mission markAsScheduled() {
-        if (status == MissionStatus.IN_PROGRESS || status == MissionStatus.SCHEDULED) {
-            throw new InvalidObjectStateException("Mission cannot be scheduled because it has invalid status. Mission: {0}", this);
-        }
+        isTransitionAllowed(status, MissionStatus.SCHEDULED);
 
         // rockets repaired
         Map<RocketId, Rocket> repairedRockets = changeRocketsStatus(
@@ -176,11 +189,7 @@ public class Mission implements SpaceXObject {
     }
 
     private void validateBeforePending(RocketId... rocketId) {
-        if (status == MissionStatus.IN_PROGRESS || status == MissionStatus.ENDED) {
-            throw new InvalidObjectStateException(
-                    "Mission cannot be marked as pending because it has invalid status. Mission: {0}", this
-            );
-        }
+        isTransitionAllowed(status, MissionStatus.PENDING);
         if (rockets.isEmpty()) {
             throw new InvalidObjectStateException(
                     "Mission cannot be marked as pending because there are no rockets. Mission: {0}", this
@@ -189,6 +198,15 @@ public class Mission implements SpaceXObject {
         if (rocketId.length == INVALID_NUMBER_OF_ROCKETS) {
             throw new InvalidObjectStateException(
                     "Mission cannot be marked as pending because number of rockets is invalid. Mission: {0}", this
+            );
+        }
+    }
+
+    private void isTransitionAllowed(MissionStatus current, MissionStatus updated) {
+        Set<MissionStatus> allowedTransitions = TRANSITIONS.get(current);
+        if (!allowedTransitions.contains(updated)) {
+            throw new InvalidObjectStateException(
+                    "Mission status {0} cannot be changed to {1}. Available statuses: {2}", current, updated, allowedTransitions
             );
         }
     }
