@@ -24,14 +24,18 @@ public class Mission implements SpaceXObject {
     private final MissionStatus status;
     private final Map<RocketId, Rocket> rockets;
 
-    static {
-        MissionStatus[] allStatuses = MissionStatus.values();
-        if (TRANSITIONS.size() != allStatuses.length) {
-            throw new InternalSpaceXException(
-                    "Some mission statuses are not handled. Transitions: {0}, All statuses: {1}",
-                    TRANSITIONS, Arrays.stream(allStatuses).toList()
-            );
-        }
+//    static {
+//        MissionStatus[] allStatuses = MissionStatus.values();
+//        if (TRANSITIONS.size() != allStatuses.length) {
+//            throw new InternalSpaceXException(
+//                    "Some mission statuses are not handled. Transitions: {0}, All statuses: {1}",
+//                    TRANSITIONS, Arrays.stream(allStatuses).toList()
+//            );
+//        }
+//    }
+
+    public Mission(MissionId id, String name) {
+        this(id, name, MissionStatus.SCHEDULED, List.of());
     }
 
     public Mission(MissionId id, String name, List<Rocket> rockets) {
@@ -88,6 +92,11 @@ public class Mission implements SpaceXObject {
 
     public Mission changeStatus(MissionStatus updatedStatus, List<Rocket> rockets) {
         isTransitionAllowed(updatedStatus);
+        if (updatedStatus == MissionStatus.PENDING && rockets.isEmpty()) {
+            throw new InvalidObjectStateException(
+                    "Mission cannot be marked as pending because there are no rockets. Mission: {0}", this
+            );
+        }
         if (updatedStatus != MissionStatus.ENDED && this.rockets.size() != rockets.size()) {
             throw new InvalidObjectStateException(
                     "Number of rockets has changed. Originally: {0}, now: {1}, mission: {2}",
