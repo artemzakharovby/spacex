@@ -21,6 +21,15 @@ public class DefaultRocketService implements RocketService<RocketId, Rocket, Mis
     }
 
     @Override
+    public List<Rocket> getRocketsByMissionId(MissionId missionId) {
+        return getAll().stream()
+                .filter(rocket ->
+                        rocket.getMissionId().isPresent() && missionId.equals(rocket.getMissionId().get())
+                )
+                .toList();
+    }
+
+    @Override
     public Rocket assignToMission(RocketId rocketId, MissionId missionId) {
         return updateRocketOrThrow(rocketId, () -> rocket -> rocket.assignToMission(missionId));
     }
