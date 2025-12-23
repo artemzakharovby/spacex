@@ -21,17 +21,22 @@ public class DefaultMissionService implements MissionService<MissionId, Mission,
     }
 
     @Override
-    public Mission markAsPending(MissionId id, Rocket... rockets) {
+    public Mission assignRockets(MissionId id, List<Rocket> rockets) {
+        return updateMissionOrThrow(id, () -> mission -> mission.assignRockets(rockets));
+    }
+
+    @Override
+    public Mission markAsPending(MissionId id, List<Rocket> rockets) {
         return updateMissionOrThrow(id, () -> mission -> mission.markAsPending(rockets));
     }
 
     @Override
-    public Mission start(MissionId id, Rocket... rockets) {
+    public Mission start(MissionId id, List<Rocket> rockets) {
         return updateMissionOrThrow(id, () -> mission -> mission.start(rockets));
     }
 
     @Override
-    public Mission schedule(MissionId id, Rocket... rockets) {
+    public Mission schedule(MissionId id, List<Rocket> rockets) {
         return updateMissionOrThrow(id, () -> mission -> mission.schedule(rockets));
     }
 
@@ -64,6 +69,6 @@ public class DefaultMissionService implements MissionService<MissionId, Mission,
         return missionRepository.get(id)
                 .map(operation.get())
                 .map(missionRepository::save)
-                .orElseThrow(() -> new SpaceXServiceException("There is no mission with ID {0}", id));
+                .orElseThrow(() -> SpaceXServiceException.notFound("mission", id));
     }
 }

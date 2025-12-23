@@ -50,32 +50,48 @@ public class Mission implements SpaceXObject {
         validate();
     }
 
-    public Mission end(Rocket... rockets) {
-        isTransitionAllowed(MissionStatus.ENDED);
-        return changeStatus(MissionStatus.ENDED, rockets);
+    public Mission assignRockets(List<Rocket> rockets) {
+        if (status == MissionStatus.IN_PROGRESS) {
+            throw new InvalidObjectStateException(
+                    "Rockets cannot be assigned to mission because its already in progress. Mission", this
+            );
+        }
+        for (Rocket rocket: rockets) {
+            MissionId missionId = rocket.getMissionId().orElseThrow();
+            if (!id.equals(missionId)) {
+                throw new InvalidObjectStateException("Mission ID {0} and rocket assigned ID {1} are not equals", id, missionId);
+            }
+            this.rockets.put(rocket.getId(), rocket);
+        }
+        return new Mission(id, name, status, this.rockets);
     }
 
-    public Mission start(Rocket... rockets) {
+    public Mission end() {
+        isTransitionAllowed(MissionStatus.ENDED);
+        return changeStatus(MissionStatus.ENDED, List.of());
+    }
+
+    public Mission start(List<Rocket> rockets) {
         isTransitionAllowed(MissionStatus.IN_PROGRESS);
         return changeStatus(MissionStatus.IN_PROGRESS, rockets);
     }
 
-    public Mission schedule(Rocket... rockets) {
+    public Mission schedule(List<Rocket> rockets) {
         isTransitionAllowed(MissionStatus.SCHEDULED);
         return changeStatus(MissionStatus.SCHEDULED, rockets);
     }
 
-    public Mission markAsPending(Rocket... rockets) {
+    public Mission markAsPending(List<Rocket> rockets) {
         isTransitionAllowed(MissionStatus.PENDING);
         return changeStatus(MissionStatus.PENDING, rockets);
     }
 
-    public Mission changeStatus(MissionStatus updatedStatus, Rocket... rockets) {
+    public Mission changeStatus(MissionStatus updatedStatus, List<Rocket> rockets) {
         isTransitionAllowed(updatedStatus);
-        if (updatedStatus != MissionStatus.ENDED && this.rockets.size() != rockets.length) {
+        if (updatedStatus != MissionStatus.ENDED && this.rockets.size() != rockets.size()) {
             throw new InvalidObjectStateException(
                     "Number of rockets has changed. Originally: {0}, now: {1}, mission: {2}",
-                    this.rockets.size(), rockets.length, this
+                    this.rockets.size(), rockets.size(), this
             );
         }
         for (Rocket rocket: rockets) {
@@ -83,7 +99,7 @@ public class Mission implements SpaceXObject {
                 throw new InvalidObjectStateException("There is no rocket with ID {0}. Mission: {1}", rocket.getId(), this);
             }
         }
-        return new Mission(id, name, updatedStatus, Arrays.stream(rockets).toList());
+        return new Mission(id, name, updatedStatus, rockets);
     }
 
     public MissionId getId() {

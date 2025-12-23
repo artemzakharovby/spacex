@@ -64,6 +64,6 @@ public class DefaultRocketService implements RocketService<RocketId, Rocket, Mis
         return rocketRepository.get(rocketId)
                 .map(operation.get())
                 .map(rocketRepository::save)
-                .orElseThrow(() -> new SpaceXServiceException("There is no rocket with ID {0}", rocketId));
+                .orElseThrow(() -> SpaceXServiceException.notFound("rocket", rocketId));
     }
 }
