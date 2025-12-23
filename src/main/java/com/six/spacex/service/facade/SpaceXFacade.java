@@ -9,11 +9,13 @@ import java.util.Comparator;
 import java.util.List;
 
 public interface SpaceXFacade {
+    Mission getMission(MissionId id);
+    Mission endMission(MissionId id);
     Rocket startRocket(RocketId id);
     Rocket markRocketAsRepaired(RocketId id);
     Rocket repairRocket(RocketId id);
     Rocket addRocket(String name);
-    Mission assignRocketsToMission(MissionId missionId, RocketId... rocketIds);
+    Mission assignRocketsToMission(MissionId missionId, List<RocketId> rocketIds);
     Mission addMission(String name, List<Rocket> rockets);
     List<Mission> getMissionsSortedBy(Comparator<Mission> comparator);
 }

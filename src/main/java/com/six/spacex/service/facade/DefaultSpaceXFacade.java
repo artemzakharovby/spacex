@@ -8,7 +8,6 @@ import com.six.spacex.service.SpaceXServiceException;
 import com.six.spacex.service.mission.MissionService;
 import com.six.spacex.service.rocket.RocketService;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +23,18 @@ public class DefaultSpaceXFacade implements SpaceXFacade {
                                RocketService<RocketId, Rocket, MissionId> rocketService) {
         this.missionService = missionService;
         this.rocketService = rocketService;
+    }
+
+    @Override
+    public Mission getMission(MissionId id) {
+        return missionService.get(id).orElseThrow();
+    }
+
+    @Override
+    public Mission endMission(MissionId id) {
+        rocketService.getRocketsByMissionId(id)
+                .forEach(rocket -> rocketService.putOnGround(rocket.getId()));
+        return missionService.end(id);
     }
 
     @Override
@@ -56,10 +67,10 @@ public class DefaultSpaceXFacade implements SpaceXFacade {
     }
 
     @Override
-    public Mission assignRocketsToMission(MissionId missionId, RocketId... rocketIds) {
-        List<Rocket> rockets = Arrays.stream(rocketIds)
+    public Mission assignRocketsToMission(MissionId missionId, List<RocketId> rocketIds) {
+        List<Rocket> rockets = rocketIds.stream()
                 .map(rocketId -> rocketService.get(rocketId)
-                        .map(rocket -> rocket.assignToMission(missionId))
+                        .map(rocket -> rocketService.assignToMission(rocketId, missionId))
                         .orElseThrow(() -> SpaceXServiceException.notFound("rocket", rocketId)))
                 .toList();
 
